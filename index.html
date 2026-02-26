@@ -3,20 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rock Paper Scissors</title>
+  <title>Click Avoid (Reflex Game)</title>
   <style>
     :root {
-      color-scheme: light;
-      font-family: "Inter", "Segoe UI", Arial, sans-serif;
-      --bg: #f4f6f8;
-      --card: #ffffff;
+      --bg: #f4f6fb;
+      --panel: #ffffff;
       --text: #1f2937;
       --muted: #6b7280;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
+      --accent: #2563eb;
+      --accent-dark: #1d4ed8;
       --danger: #dc2626;
-      --danger-hover: #b91c1c;
-      --border: #e5e7eb;
+      --success: #059669;
     }
 
     * {
@@ -26,290 +23,331 @@
     body {
       margin: 0;
       min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #eef2ff 0%, var(--bg) 100%);
+      color: var(--text);
       display: grid;
       place-items: center;
-      background: var(--bg);
-      color: var(--text);
-      padding: 20px;
-    }
-
-    .app {
-      width: min(640px, 100%);
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 12px 34px rgba(15, 23, 42, 0.12);
       padding: 24px;
     }
 
+    .app {
+      width: min(760px, 100%);
+      background: var(--panel);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+      padding: 20px;
+    }
+
     h1 {
-      margin: 0 0 8px;
+      margin: 0 0 14px;
+      font-size: clamp(1.25rem, 2.5vw, 1.8rem);
       text-align: center;
-      font-size: 1.8rem;
     }
 
-    .visible-title {
-      text-align: center;
-      font-size: 0.9rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--primary);
-      margin: 0 0 6px;
-    }
-
-    .subtitle {
-      margin: 0 0 20px;
-      color: var(--muted);
-      text-align: center;
-      font-size: 0.95rem;
-    }
-
-    .moves {
+    .controls {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+
+    button,
+    select {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--text);
     }
 
     button {
-      border: none;
-      border-radius: 10px;
-      padding: 12px;
-      font-size: 1rem;
-      font-weight: 600;
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 700;
       cursor: pointer;
-      transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+      transition: background 0.15s ease;
     }
 
-    .move-btn {
-      background: var(--primary);
-      color: #ffffff;
+    button:hover:not(:disabled) {
+      background: var(--accent-dark);
     }
 
-    .move-btn:hover:not(:disabled),
-    .reset-btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
-    }
-
-    .move-btn:hover:not(:disabled) {
-      background: var(--primary-hover);
-    }
-
-    .reset-btn {
-      width: 100%;
-      max-width: 220px;
-      margin: 0 auto 18px;
-      display: block;
-      background: var(--danger);
-      color: #ffffff;
-    }
-
-    .reset-btn:hover:not(:disabled) {
-      background: var(--danger-hover);
-      box-shadow: 0 8px 16px rgba(220, 38, 38, 0.24);
-    }
-
-    button:disabled {
+    button:disabled,
+    select:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
     }
 
-    .status {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: #f9fafb;
-      padding: 14px;
-      margin-bottom: 12px;
-      line-height: 1.7;
-    }
-
-    .status strong {
-      display: inline-block;
-      min-width: 138px;
-    }
-
-    .scoreboard {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      text-align: center;
-    }
-
-    .score-item {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
       font-weight: 700;
-      background: #f9fafb;
+      margin: 8px 0 14px;
+      color: var(--muted);
+    }
+
+    .stats span strong {
+      color: var(--text);
+    }
+
+    #gameArea {
+      position: relative;
+      height: 360px;
+      border: 2px solid #cbd5e1;
+      border-radius: 14px;
+      overflow: hidden;
+      background: radial-gradient(circle at 20% 20%, #ffffff 0%, #eef2ff 100%);
+      user-select: none;
+    }
+
+    #target {
+      position: absolute;
+      width: 54px;
+      height: 54px;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(145deg, #f97316, #ea580c);
+      box-shadow: 0 4px 10px rgba(234, 88, 12, 0.35);
+      color: transparent;
+      cursor: pointer;
+      display: none;
+      touch-action: manipulation;
+    }
+
+    #target:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #message {
+      margin-top: 12px;
+      min-height: 1.4em;
+      text-align: center;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .game-over {
+      color: var(--danger);
+    }
+
+    .ready {
+      color: var(--success);
     }
   </style>
 </head>
 <body>
   <main class="app">
-    <div class="visible-title">Rock Paper Scissors</div>
-    <h1>Rock Paper Scissors</h1>
-    <p class="subtitle">Use your mouse or keyboard shortcuts: <strong>R</strong>ock, <strong>P</strong>aper, <strong>S</strong>cissors.</p>
+    <h1>Click Avoid (Reflex Game)</h1>
 
-    <section class="moves" aria-label="Move selection">
-      <button type="button" class="move-btn" data-move="Rock">Rock</button>
-      <button type="button" class="move-btn" data-move="Paper">Paper</button>
-      <button type="button" class="move-btn" data-move="Scissors">Scissors</button>
+    <div class="controls">
+      <button id="startBtn" type="button">Start</button>
+      <button id="restartBtn" type="button">Restart</button>
+      <select id="difficulty" aria-label="Select difficulty">
+        <option value="easy">Easy (No auto-move)</option>
+        <option value="normal" selected>Normal (1.5s auto-move)</option>
+        <option value="hard">Hard (0.8s auto-move)</option>
+      </select>
+    </div>
+
+    <div class="stats">
+      <span>Score: <strong id="score">0</strong></span>
+      <span>Time: <strong id="timer">30</strong>s</span>
+    </div>
+
+    <section id="gameArea" aria-label="Game area">
+      <button id="target" type="button" aria-label="Target"></button>
     </section>
 
-    <button type="button" id="resetScore" class="reset-btn">Reset score</button>
-
-    <section class="status" aria-live="polite">
-      <div><strong>Your choice:</strong> <span id="userChoice">-</span></div>
-      <div><strong>Computer choice:</strong> <span id="computerChoice">-</span></div>
-      <div><strong>Round result:</strong> <span id="roundResult">Make your move</span></div>
-    </section>
-
-    <section class="scoreboard" aria-label="Game score">
-      <div class="score-item">Wins: <span id="wins">0</span></div>
-      <div class="score-item">Losses: <span id="losses">0</span></div>
-      <div class="score-item">Draws: <span id="draws">0</span></div>
-    </section>
+    <div id="message" class="ready">Press Start or Space to play.</div>
   </main>
 
   <script>
     (function () {
-      const CHOICES = ["Rock", "Paper", "Scissors"];
-      const WIN_MAP = {
-        Rock: "Scissors",
-        Paper: "Rock",
-        Scissors: "Paper",
+      const GAME_DURATION = 30;
+      const TARGET_SIZE = 54;
+      const MOVE_DEBOUNCE_MS = 65;
+
+      const autoMoveRates = {
+        easy: 0,
+        normal: 1500,
+        hard: 800,
       };
 
-      const state = {
-        isLocked: false,
-        score: {
-          wins: 0,
-          losses: 0,
-          draws: 0,
-        },
-      };
+      const gameArea = document.getElementById('gameArea');
+      const target = document.getElementById('target');
+      const scoreEl = document.getElementById('score');
+      const timerEl = document.getElementById('timer');
+      const messageEl = document.getElementById('message');
+      const startBtn = document.getElementById('startBtn');
+      const restartBtn = document.getElementById('restartBtn');
+      const difficultySelect = document.getElementById('difficulty');
 
-      const elements = {
-        userChoice: document.getElementById("userChoice"),
-        computerChoice: document.getElementById("computerChoice"),
-        roundResult: document.getElementById("roundResult"),
-        wins: document.getElementById("wins"),
-        losses: document.getElementById("losses"),
-        draws: document.getElementById("draws"),
-        moveButtons: Array.from(document.querySelectorAll("button[data-move]")),
-        resetButton: document.getElementById("resetScore"),
-      };
+      let score = 0;
+      let timeLeft = GAME_DURATION;
+      let playing = false;
+      let tickInterval = null;
+      let autoMoveInterval = null;
+      let moveLocked = false;
+      let moveUnlockTimeout = null;
 
-      function updateScoreView() {
-        elements.wins.textContent = String(state.score.wins);
-        elements.losses.textContent = String(state.score.losses);
-        elements.draws.textContent = String(state.score.draws);
+      function updateScore(nextScore) {
+        score = Math.max(0, nextScore);
+        scoreEl.textContent = String(score);
       }
 
-      function setMoveButtonsState(disabled) {
-        elements.moveButtons.forEach((button) => {
-          button.disabled = disabled;
+      function updateTimer(nextTime) {
+        timeLeft = Math.max(0, nextTime);
+        timerEl.textContent = String(timeLeft);
+      }
+
+      function lockMovementTemporarily() {
+        moveLocked = true;
+        if (moveUnlockTimeout) {
+          clearTimeout(moveUnlockTimeout);
+        }
+        moveUnlockTimeout = setTimeout(() => {
+          moveLocked = false;
+        }, MOVE_DEBOUNCE_MS);
+      }
+
+      function moveTargetRandomly() {
+        if (!playing || moveLocked) return;
+
+        const rect = gameArea.getBoundingClientRect();
+        const maxX = Math.max(0, rect.width - TARGET_SIZE);
+        const maxY = Math.max(0, rect.height - TARGET_SIZE);
+
+        const x = Math.random() * maxX;
+        const y = Math.random() * maxY;
+
+        lockMovementTemporarily();
+        target.disabled = true;
+        target.style.left = `${x}px`;
+        target.style.top = `${y}px`;
+
+        requestAnimationFrame(() => {
+          if (playing) {
+            target.disabled = false;
+          }
         });
       }
 
-      function getComputerChoice() {
-        const index = Math.floor(Math.random() * CHOICES.length);
-        return CHOICES[index];
+      function clearIntervals() {
+        if (tickInterval) {
+          clearInterval(tickInterval);
+          tickInterval = null;
+        }
+        if (autoMoveInterval) {
+          clearInterval(autoMoveInterval);
+          autoMoveInterval = null;
+        }
       }
 
-      function getRoundResult(playerChoice, cpuChoice) {
-        if (playerChoice === cpuChoice) {
-          return "Draw";
+      function setupAutoMove() {
+        if (autoMoveInterval) {
+          clearInterval(autoMoveInterval);
+          autoMoveInterval = null;
         }
-        return WIN_MAP[playerChoice] === cpuChoice ? "Win" : "Lose";
+
+        const rate = autoMoveRates[difficultySelect.value] ?? 0;
+        if (rate > 0) {
+          autoMoveInterval = setInterval(() => {
+            moveTargetRandomly();
+          }, rate);
+        }
       }
 
-      function playRound(playerChoice) {
-        if (state.isLocked) {
-          return;
-        }
-
-        if (!CHOICES.includes(playerChoice)) {
-          elements.roundResult.textContent = "Invalid move ignored";
-          return;
-        }
-
-        state.isLocked = true;
-        setMoveButtonsState(true);
-
-        const cpuChoice = getComputerChoice();
-        const result = getRoundResult(playerChoice, cpuChoice);
-
-        elements.userChoice.textContent = playerChoice;
-        elements.computerChoice.textContent = cpuChoice;
-        elements.roundResult.textContent = result;
-
-        if (result === "Win") {
-          state.score.wins += 1;
-        } else if (result === "Lose") {
-          state.score.losses += 1;
-        } else {
-          state.score.draws += 1;
-        }
-
-        updateScoreView();
-
-        window.setTimeout(function () {
-          state.isLocked = false;
-          setMoveButtonsState(false);
-        }, 100);
+      function endGame() {
+        playing = false;
+        clearIntervals();
+        target.disabled = true;
+        messageEl.textContent = `Game Over! Final score: ${score}`;
+        messageEl.className = 'game-over';
+        startBtn.textContent = 'Start';
+        difficultySelect.disabled = false;
       }
 
-      function resetScore() {
-        state.score.wins = 0;
-        state.score.losses = 0;
-        state.score.draws = 0;
+      function startGame() {
+        clearIntervals();
+        playing = true;
+        updateScore(0);
+        updateTimer(GAME_DURATION);
+        messageEl.textContent = 'Click the target. Missing costs 1 point.';
+        messageEl.className = '';
+        target.style.display = 'block';
+        target.disabled = false;
+        difficultySelect.disabled = true;
+        startBtn.textContent = 'Running...';
 
-        elements.userChoice.textContent = "-";
-        elements.computerChoice.textContent = "-";
-        elements.roundResult.textContent = "Score reset";
+        moveLocked = false;
+        if (moveUnlockTimeout) {
+          clearTimeout(moveUnlockTimeout);
+          moveUnlockTimeout = null;
+        }
 
-        updateScoreView();
+        moveTargetRandomly();
+        setupAutoMove();
+
+        tickInterval = setInterval(() => {
+          updateTimer(timeLeft - 1);
+          if (timeLeft <= 0) {
+            endGame();
+          }
+        }, 1000);
       }
 
-      function onKeyDown(event) {
-        if (event.repeat) {
-          return;
-        }
-
-        const active = document.activeElement;
-        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
-          return;
-        }
-
-        const key = event.key.toLowerCase();
-        const moveByKey = {
-          r: "Rock",
-          p: "Paper",
-          s: "Scissors",
-        };
-
-        if (!Object.prototype.hasOwnProperty.call(moveByKey, key)) {
-          return;
-        }
-
-        playRound(moveByKey[key]);
+      function restartGame() {
+        startGame();
       }
 
-      elements.moveButtons.forEach((button) => {
-        button.addEventListener("click", function () {
-          playRound(button.dataset.move);
-        });
+      startBtn.addEventListener('click', () => {
+        if (!playing) {
+          startGame();
+        }
       });
 
-      elements.resetButton.addEventListener("click", resetScore);
-      document.addEventListener("keydown", onKeyDown);
+      restartBtn.addEventListener('click', () => {
+        restartGame();
+      });
 
-      updateScoreView();
+      difficultySelect.addEventListener('change', () => {
+        if (playing) {
+          setupAutoMove();
+        }
+      });
+
+      target.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (!playing || target.disabled || moveLocked) return;
+        updateScore(score + 1);
+        moveTargetRandomly();
+      });
+
+      gameArea.addEventListener('click', (event) => {
+        if (!playing) return;
+        if (event.target === target) return;
+        updateScore(score - 1);
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.code !== 'Space') return;
+        event.preventDefault();
+        if (playing) {
+          restartGame();
+        } else {
+          startGame();
+        }
+      });
+
+      window.addEventListener('beforeunload', clearIntervals);
     })();
   </script>
 </body>
